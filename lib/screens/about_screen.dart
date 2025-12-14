@@ -20,5 +20,5 @@ class AboutScreen extends StatelessWidget {
         ],
       ),
     );
-  }
+  } 
 }
