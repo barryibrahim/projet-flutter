@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,7 +10,8 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _prenomController = TextEditingController();
+  final _nomController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -18,30 +20,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _prenomController.dispose();
+    _nomController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate() && _agree) {
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate()) {
       showDialog(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("Inscription"),
-          content: Text(
-            "Nom : ${_nameController.text}\nEmail : ${_emailController.text}",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("OK"),
-            )
-          ],
-        ),
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
+
+      int result = await ApiService.registerUser(
+        _prenomController.text,
+        _nomController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      Navigator.of(context).pop();
+
+      if (result == 201) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Inscription réussie'),
+            content: const Text('Compte créé avec succès'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushReplacementNamed('/login');
+                },
+                child: const Text('OK'),
+              )
+            ],
+          ),
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Erreur'),
+            content: Text('Code erreur : $result'),
+          ),
+        );
+      }
     }
   }
 
@@ -59,13 +88,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               children: [
                 TextFormField(
-                  controller: _nameController,
+                  controller: _nomController,
                   decoration: const InputDecoration(
                     labelText: "Nom",
                     border: OutlineInputBorder(),
                   ),
                   validator: (value) =>
                       value == null || value.isEmpty ? "Nom obligatoire" : null,
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _prenomController,
+                  decoration: const InputDecoration(
+                    labelText: "Prénom",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? "Prénom obligatoire"
+                      : null,
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
